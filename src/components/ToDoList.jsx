@@ -3,13 +3,18 @@ import { AgGridReact } from 'ag-grid-react'; // AG Grid Component
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import "ag-grid-community/styles/ag-theme-material.css"; // Optional Theme applied to the grid
 import dayjs from 'dayjs';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Stack from '@mui/material/Stack';
+import { DatePicker } from "@mui/x-date-pickers";
 
 function ToDoList() {
 
   const [todo, setTodo] = useState({ description: "", priority: "", date: dayjs().format('DD.MM.YYYY') });
   const [todos, setTodos] = useState([]);
   const gridRef = useRef();//To get access to the Grid API, we can use the React useRef hook function,avulla kutsutaan aggrid metodeja
-  // Columns
+
+
   const [columnDefs, setColumnDefs] = useState([
     { field: 'description', sortable: false, filter: true, floatingFilter: true },
     {
@@ -21,12 +26,12 @@ function ToDoList() {
 
   const addTodo = (event) => {
     event.preventDefault();
+
     setTodos([...todos, todo])
-    setTodo({ date: dayjs().format('DD.MM.YYYY'), description: "", priority: "" })
+    setTodo({ date: "", description: "", priority: "" })
   }
 
   const handleDelete = (event) => {
-    //console.log(gridRef.current.getSelectedNodes());
     event.preventDefault();
     if (gridRef.current.getSelectedNodes().length > 0) {
       setTodos(todos.filter((todo, index) =>
@@ -37,42 +42,50 @@ function ToDoList() {
     }
   };
 
+  const formatDate = (date) => {
+    setTodo({ ...todo, date: dayjs(date).format('DD.MM.YYYY') })
+  }
 
 
   return (
     <>
-      <div className='TodoList'>
+      <Stack direction="column" justifyContent="center" alignItems="center">
+        <Stack mt={2} direction="row" spacing={2} justifyContent="center" alignItems="center">
 
-        <form onSubmit={addTodo}>
-          <fieldset>
-            <legend>Add todo:</legend>
-            <input
-              placeholder="Description"
-              onChange={e => setTodo({ ...todo, description: e.target.value })}
-              value={todo.description} />
-            <input
-              placeholder="Priority"
-              onChange={e => setTodo({ ...todo, priority: e.target.value })}
-              value={todo.priority} />
-            <input
-              placeholder="Date"
-              onChange={e => setTodo({ ...todo, date: e.target.value })}
-              value={todo.date} />
-            <button onClick={addTodo}>Add</button>
-            <button onClick={handleDelete}>Delete</button>
-          </fieldset>
-        </form>
+          <TextField
+            label="Description"
+            onChange={e => setTodo({ ...todo, description: e.target.value })}
+            value={todo.description}
+          />
+          <TextField
+            label="Priority"
+            onChange={e => setTodo({ ...todo, priority: e.target.value })}
+            value={todo.priority}
+          />
+          <DatePicker
+            label="Date"
+            format="DD.MM.YYYY"
+            //value={dayjs(todo.date)}
+            //onChange={date => setTodo({ ...todo, date: dayjs(date).format('DD.MM.YYYY') })}
+            onChange={date => formatDate(date)}
+          />
+          <Button onClick={addTodo}>Add</Button>
+          <Button color="error" onClick={handleDelete}>Delete</Button>
+        </Stack >
 
-        <div className="ag-theme-material" style={{ width: 700, height: 500 }}>
+
+
+        <div className="ag-theme-material" style={{ width: 600, height: 500 }}>
           <AgGridReact
+            ref={gridRef}
+            onGridReady={params => gridRef.current = params.api}
             rowData={todos}
             columnDefs={columnDefs}
-            rowSelection="single" //First, we have to enable row selection(kerrotaan että rivivalinnat mahdollisia) and set mode to single selection by using the rowSelection grid prop.
-            ref={gridRef}
-            onGridReady={params => gridRef.current = params.api} //aggridin käyttöön sääntö, ei yleinen react
+            rowSelection="single"
           />
-        </div>
-      </div>
+        </div >
+        
+        </Stack >
     </>
   );
 }
